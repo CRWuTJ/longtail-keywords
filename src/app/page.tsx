@@ -1,101 +1,74 @@
-import Image from "next/image";
+'use client';
+import { useState } from 'react';
+
+interface Keyword { keyword: string; intent: string; competition: string; }
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [seed, setSeed] = useState('');
+  const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const generate = async () => {
+    if (!seed.trim()) return;
+    setLoading(true); setError(''); setKeywords([]);
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: seed.trim() })
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); } else { setKeywords(data.keywords || []); }
+    } catch { setError('网络错误，请重试'); }
+    setLoading(false);
+  };
+
+  const copyAll = () => {
+    const text = keywords.map(k => k.keyword).join('\n');
+    navigator.clipboard.writeText(text);
+  };
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <h1 className="text-4xl font-bold text-center text-gray-900 mb-2">AI 长尾关键词助手</h1>
+        <p className="text-center text-gray-500 mb-8">输入种子关键词，AI 为你生成20个高质量长尾关键词</p>
+        <div className="flex gap-3 mb-8">
+          <input value={seed} onChange={e => setSeed(e.target.value)} onKeyDown={e => e.key === 'Enter' && generate()}
+            placeholder="输入种子关键词，如：减肥" className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg" />
+          <button onClick={generate} disabled={loading || !seed.trim()}
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-lg whitespace-nowrap">
+            {loading ? '生成中...' : '生成关键词'}
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {keywords.length > 0 && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-600">共 {keywords.length} 个关键词</span>
+              <button onClick={copyAll} className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50">一键复制全部</button>
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full">
+                <thead className="bg-gray-50"><tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">序号</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">长尾关键词</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">搜索意图</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">竞争度</th>
+                </tr></thead>
+                <tbody>{keywords.map((k, i) => (
+                  <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-500">{i + 1}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{k.keyword}</td>
+                    <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 rounded text-xs ${k.intent === '信息型' ? 'bg-green-100 text-green-700' : k.intent === '商业型' ? 'bg-yellow-100 text-yellow-700' : k.intent === '交易型' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>{k.intent}</span></td>
+                    <td className="px-4 py-3 text-sm"><span className={`px-2 py-1 rounded text-xs ${k.competition === '低' ? 'bg-green-100 text-green-700' : k.competition === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{k.competition}</span></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
